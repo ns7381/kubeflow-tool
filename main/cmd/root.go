@@ -21,10 +21,10 @@ func NewCommand() *cobra.Command {
 	}
 
 	command.AddCommand(NewSubmitCommand())
-	//command.AddCommand(NewListCommand())
+	command.AddCommand(NewListCommand())
 	//command.AddCommand(NewGetCommand())
 	//command.AddCommand(NewLogViewerCommand())
-	//command.AddCommand(NewLogsCommand())
+	command.AddCommand(NewLogsCommand())
 	//command.AddCommand(NewDeleteCommand())
 	//command.AddCommand(NewTopCommand())
 	//command.AddCommand(NewVersionCmd(CLIName))

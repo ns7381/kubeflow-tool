@@ -22,6 +22,7 @@ func NewSubmitTFJobCommand() *cobra.Command {
 	var command = &cobra.Command{
 		Use:     "tfjob",
 		Short:   "Submit TFJob as training job.",
+		Long:   "Submit TFJob as training job. Running container mount your netdisk to /notebook",
 		Aliases: []string{"tf"},
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
@@ -70,13 +71,16 @@ func submitTFJob(client dynamic.Interface, args []string, submitArgs *submitTFJo
 		return err
 	}
 	tfJobRes := schema.GroupVersionResource{Group: "kubeflow.org", Version: "v1", Resource: "tfjobs"}
-
 	tfJob := &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": "kubeflow.org/v1",
 			"kind":       "TFJob",
 			"metadata": map[string]interface{}{
 				"name": name,
+				"namespace": config.Namespace,
+				"labels": map[string]interface{}{
+					"createdBy": loginUser,
+				},
 			},
 			"spec": map[string]interface{}{
 				"tfReplicaSpecs": map[string]interface{}{
@@ -91,6 +95,18 @@ func submitTFJob(client dynamic.Interface, args []string, submitArgs *submitTFJo
 										"image": submitArgs.PSImage,
 										"workingDir": submitArgs.WorkingDir,
 										"command": []string{"sh", "-c", submitArgs.Command},
+										"resources": map[string]interface{}{
+											"limits": map[string]interface{}{
+												"cpu": submitArgs.PSCpu,
+												"memory": submitArgs.PSMemory,
+												"nvidia.com/gpu": "0",
+											},
+											"requests": map[string]interface{}{
+												"cpu": submitArgs.PSCpu,
+												"memory": submitArgs.PSMemory,
+												"nvidia.com/gpu": "0",
+											},
+										},
 										"volumeMounts": []map[string]interface{}{
 											{
 												"name": "netdisk",
@@ -103,7 +119,7 @@ func submitTFJob(client dynamic.Interface, args []string, submitArgs *submitTFJo
 									{
 										"name": "netdisk",
 										"persistentVolumeClaim": map[string]interface{}{
-											"claimName": "example-pvc",
+											"claimName": "claim-" + loginUser,
 										},
 									},
 								},
@@ -121,6 +137,18 @@ func submitTFJob(client dynamic.Interface, args []string, submitArgs *submitTFJo
 										"image": submitArgs.WorkerImage,
 										"workingDir": submitArgs.WorkingDir,
 										"command": []string{"sh", "-c", submitArgs.Command},
+										"resources": map[string]interface{}{
+											"limits": map[string]interface{}{
+												"cpu": submitArgs.WorkerCpu,
+												"memory": submitArgs.WorkerMemory,
+												"nvidia.com/gpu": submitArgs.GPUCount,
+											},
+											"requests": map[string]interface{}{
+												"cpu": submitArgs.WorkerCpu,
+												"memory": submitArgs.WorkerMemory,
+												"nvidia.com/gpu": submitArgs.GPUCount,
+											},
+										},
 										"volumeMounts": []map[string]interface{}{
 											{
 												"name": "netdisk",
@@ -133,7 +161,7 @@ func submitTFJob(client dynamic.Interface, args []string, submitArgs *submitTFJo
 									{
 										"name": "netdisk",
 										"persistentVolumeClaim": map[string]interface{}{
-											"claimName": "example-pvc",
+											"claimName": "claim-" + loginUser,
 										},
 									},
 								},

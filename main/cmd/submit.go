@@ -7,12 +7,6 @@ import (
 )
 var (
 	envs        []string
-	selectors   []string
-	configFiles []string
-	tolerations []string
-	dataset     []string
-	dataDirs    []string
-	annotations []string
 )
 
 var (
@@ -94,6 +88,6 @@ func (submitArgs *submitArgs) addCommonFlags(command *cobra.Command) {
 	command.Flags().IntVar(&submitArgs.WorkerCount, "workers", 1,
 		"the worker number to run the distributed training.")
 	// command.MarkFlagRequired("syncSource")
-	command.Flags().StringVar(&submitArgs.WorkingDir, "working-dir", "/", "working directory to extract the code. If using syncMode, the $workingDir/code contains the code")
+	command.Flags().StringVar(&submitArgs.WorkingDir, "working-dir", "/", "working directory to extract the code. Default is /")
 	command.Flags().StringArrayVarP(&envs, "env", "e", []string{}, "the environment variables")
 }
